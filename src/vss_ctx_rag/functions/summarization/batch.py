@@ -117,6 +117,7 @@ class BatchSummarization(Function):
             "pink",
         ):
             logger.info("Batch %d is full. Processing ...", batch._batch_index)
+            logger.info(f"[BATCH_PROCESSING] Batch {batch._batch_index} is full! Starting graph processing with {len(batch.as_list())} documents")
             try:
                 with get_openai_callback() as cb:
                     batch_summary = await call_token_safe(

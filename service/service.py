@@ -109,10 +109,12 @@ def check_context_manager():
 async def add_doc(doc: AddRequest):
     check_context_manager()
     try:
+        logger.info(f"[SERVICE] Starting to add document {doc.doc_index} to context manager")
         app_state.ctx_mgr.add_doc(doc.document, doc.doc_index, doc.doc_metadata)
         response = f"Added document {doc.doc_index}"
         if "is_last" in doc.doc_metadata:
             response += " and calling post process"
+            logger.info(f"[SERVICE] Document {doc.doc_index} is marked as last - calling post process (graph processing)")
             app_state.ctx_mgr.call({"chat": {"post_process": True}})
         return {"status": "success", "result": response}
     except Exception as e:
@@ -126,7 +128,9 @@ async def call_endpoint(call_request: CallRequest):
     check_context_manager()
     try:
         result = app_state.ctx_mgr.call(call_request.state)
-        return {"status": "success", "result": result["chat"]["response"]}
+        # Return full chat state instead of just response text
+        # This now includes retrieval_metadata, confidence, etc.
+        return {"status": "success", "result": result.get("chat", {})}
     except Exception as e:
         traceback.print_exc()
         print(e)

@@ -2,3 +2,4 @@
  py.typed
  .env
 docker/deploy/volumes/
+docker/deploy/ngc/

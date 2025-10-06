@@ -215,7 +215,7 @@ Only respond with the query, nothing else.
 VECTOR_SEARCH_TOP_K = 5
 
 ## CHAT SETUP
-CHAT_SEARCH_KWARG_SCORE_THRESHOLD = 0.5
+CHAT_SEARCH_KWARG_SCORE_THRESHOLD = 0.6  # High threshold - only highly relevant results
 CHAT_EMBEDDING_FILTER_SCORE_THRESHOLD = 0.10
 
 QUERY_TO_DELETE_UUID_GRAPH = """

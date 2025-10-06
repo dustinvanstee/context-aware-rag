@@ -111,6 +111,7 @@ class GraphExtractionFunc(Function):
                     )
             batch = self.batcher.add_doc(doc, doc_i=doc_i, doc_meta=doc_meta)
             if batch.is_full():
+                logger.info(f"[GRAPH_PROCESSING] GraphRAG batch {self.batcher.get_batch_index(doc_i)} is full! Starting graph extraction for {len(batch.as_list())} documents")
                 with TimeMeasure(
                     "GraphRAG/aprocess-doc/graph-create: "
                     + str(self.batcher.get_batch_index(doc_i)),

@@ -109,6 +109,7 @@ class Batch:
 class Batcher:
     def __init__(self, batch_size):
         logger.info("Setting up Batcher with batch size %d", batch_size)
+        print(f"[DEBUG] Batcher initialized with batch_size={batch_size}")
         self.batch_size = batch_size
         self.batches = defaultdict(lambda: Batch(self.batch_size))
         self._lock = threading.Lock()
@@ -125,9 +126,11 @@ class Batcher:
             Batch: The batch that the document was added to
         """
         with TimeMeasure("Add Doc", "green"):
+            batch_index = doc_i // self.batch_size
             logger.info(f"adding {doc_i} to batch")
+            print(f"[DEBUG] Adding doc_i={doc_i} to batch_index={batch_index} (batch_size={self.batch_size})")
             with self._lock:
-                batch = self.batches[doc_i // self.batch_size]
+                batch = self.batches[batch_index]
                 batch.add_doc(doc, doc_i, doc_meta)
                 return batch
 

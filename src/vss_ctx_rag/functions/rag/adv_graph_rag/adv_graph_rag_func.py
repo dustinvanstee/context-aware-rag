@@ -132,9 +132,13 @@ class AdvGraphRAGFunc(Function):
             logger.info(f"Processing question: {question}")
             logger.debug(f"Chat history length: {len(self.chat_history)}")
 
-            # Initial retrieval
-            context = await self.retriever.retrieve_relevant_context(question)
-            retrieved_context = deepcopy(context)
+            # Initial retrieval - now returns (documents, metadata)
+            context, retrieval_metadata = await self.retriever.retrieve_relevant_context(question)
+            
+            # Add retrieval metadata to state
+            state["retrieval_metadata"] = retrieval_metadata
+            
+            retrieved_context = deepcopy(context) if context else None
 
             # If no context is found, assume that we did a temporal retrieval and
             # nothing turned up
@@ -231,7 +235,7 @@ class AdvGraphRAGFunc(Function):
                     self.chat_history.append(current_interaction)
 
                     # Append relevant documents to the top of the answer
-                    if len(retrieved_context) > 0:
+                    if retrieved_context and len(retrieved_context) > 0:
                         snippet_len = 200
                         citation_text = "**Sources:**\n"
                         for doc in retrieved_context:
@@ -250,7 +254,7 @@ class AdvGraphRAGFunc(Function):
                     new_context = []
                     for info_need in [result["updated_question"]]:
                         # Use the retriever to get additional context
-                        additional_docs = (
+                        additional_docs, _ = (
                             await self.retriever.retrieve_relevant_context(info_need)
                         )
                         if additional_docs is not None:
