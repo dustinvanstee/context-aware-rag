@@ -60,21 +60,23 @@ class GraphRetrieval:
         self.top_k = top_k
         self.uuid = uuid
         self.multi_channel = multi_channel
+        # Nemotron fix: /no_think must be the ONLY content of system message
         summarization_prompt = ChatPromptTemplate.from_messages(
             [
+                ("system", "/no_think"),
                 MessagesPlaceholder(variable_name="chat_history"),
                 (
-                    "system",
-                    "Summarize the above chat messages into a concise message, \
-                    focusing on key points and relevant details that could be useful for future conversations. \
-                    Exclude all introductions and extraneous information.",
+                    "human",
+                    "Summarize the above chat messages into a concise message, "
+                    "focusing on key points and relevant details that could be useful for future conversations. "
+                    "Exclude all introductions and extraneous information.",
                 ),
             ]
         )
-        self.chat_history_summarization_chain = summarization_prompt | llm
         question_answering_prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", CHAT_SYSTEM_TEMPLATE),
+                ("system", "/no_think"),
+                ("human", CHAT_SYSTEM_TEMPLATE),
                 MessagesPlaceholder(variable_name="messages"),
                 ("human", "User question: {input}"),
             ]
@@ -149,9 +151,11 @@ class GraphRetrieval:
             try:
                 logger.info("Starting to create document retriever chain")
 
+                # Nemotron fix: /no_think must be the ONLY content of system message
                 query_transform_prompt = ChatPromptTemplate.from_messages(
                     [
-                        ("system", QUESTION_TRANSFORM_TEMPLATE),
+                        ("system", "/no_think"),
+                        ("human", QUESTION_TRANSFORM_TEMPLATE),
                         MessagesPlaceholder(variable_name="messages"),
                     ]
                 )

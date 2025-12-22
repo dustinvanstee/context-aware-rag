@@ -157,9 +157,8 @@ VECTOR_GRAPH_SEARCH_QUERY = (
 )
 
 ### CHAT TEMPLATES
-CHAT_SYSTEM_TEMPLATE = """
-
-You are an AI-powered question-answering agent watching a video. The video summary is given below.
+# Note: /no_think is added as separate system message in graph_retrieval.py (Nemotron fix)
+CHAT_SYSTEM_TEMPLATE = """You are an AI-powered question-answering agent watching a video. The video summary is given below.
 Your task is to provide accurate and comprehensive responses to user queries based on the video, chat history, and available resources.
 Answer the questions from the point of view of someone watching the video.
 
@@ -205,8 +204,8 @@ AI Response: "I don't have that information right now. Is there something else I
 Note: This system does not generate answers based solely on internal knowledge. It answers from the information provided in the user's current and previous inputs, and from the context.
 """
 
-QUESTION_TRANSFORM_TEMPLATE = """
-Given the below conversation, generate a search query to look up in order to get information relevant to the conversation.
+# Note: /no_think is added as separate system message in graph_retrieval.py (Nemotron fix)
+QUESTION_TRANSFORM_TEMPLATE = """Given the below conversation, generate a search query to look up in order to get information relevant to the conversation.
 Only provide information relevant to the context. Do not invent information.
 Only respond with the query, nothing else.
 """

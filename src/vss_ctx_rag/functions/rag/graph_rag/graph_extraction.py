@@ -63,12 +63,57 @@ class GraphExtraction:
         embedding_parallel_count: int = DEFAULT_EMBEDDING_PARALLEL_COUNT,
     ):
         self.graph_db = graph
+        # For Nemotron: /no_think must be the ONLY system message content
+        # Use create_unstructured_prompt (designed for ignore_tool_usage=True) as base
+        from langchain_experimental.graph_transformers.llm import create_unstructured_prompt, examples, UnstructuredRelation
+        from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
+        from langchain_core.messages import SystemMessage
+        from langchain_core.output_parsers import JsonOutputParser
+        
+        # Get the unstructured prompt (has explicit JSON formatting instructions)
+        base_prompt = create_unstructured_prompt()
+        
+        # Get format instructions and examples to pre-fill the template
+        parser = JsonOutputParser(pydantic_object=UnstructuredRelation)
+        format_instructions = parser.get_format_instructions()
+        
+        # Extract system content and human template
+        system_content = ""
+        human_template = ""
+        for msg in base_prompt.messages:
+            if isinstance(msg, SystemMessage):
+                system_content = msg.content
+            elif isinstance(msg, HumanMessagePromptTemplate):
+                human_template = msg.prompt.template
+        
+        # Pre-fill examples and format_instructions, keeping only {input} as variable
+        # Need to escape the curly braces in format_instructions first
+        format_instructions_escaped = format_instructions.replace("{", "{{").replace("}", "}}")
+        examples_str = str(examples).replace("{", "{{").replace("}", "}}")
+        
+        human_template_filled = human_template.replace("{examples}", examples_str)
+        human_template_filled = human_template_filled.replace("{format_instructions}", format_instructions_escaped)
+        
+        # Build new prompt: system has ONLY /no_think, human has system instructions + filled template
+        new_human_template = f"""{system_content}
+
+{human_template_filled}"""
+        
+        graph_extraction_prompt = ChatPromptTemplate.from_messages([
+            ("system", "/no_think"),
+            ("human", new_human_template),
+        ])
+        
+        logger.info("=== GRAPH EXTRACTION PROMPT (Nemotron /no_think fix) ===")
+        logger.info("System message: /no_think only, using unstructured prompt for JSON output")
+        
         self.transformer = LLMGraphTransformer(
             llm=llm,
             allowed_nodes=[],
             node_properties=False,
             relationship_properties=False,
             ignore_tool_usage=True,
+            prompt=graph_extraction_prompt,
         )
         self.uuid = uuid
         self.batcher = batcher
@@ -555,6 +600,11 @@ class GraphExtraction:
             cleaned_graph_documents = self.handle_backticks_nodes_relationship_id_type(
                 graph_documents
             )
+            
+            logger.info(f"=== AFTER CLEANING ===")
+            for i, gd in enumerate(cleaned_graph_documents):
+                logger.info(f"  Cleaned doc {i}: {len(gd.nodes)} nodes, {len(gd.relationships)} relationships")
+            
             self.cleaned_graph_documents_list.extend(cleaned_graph_documents)
             with TimeMeasure(
                 "GraphRAG/aprocess-doc/graph-create/add-graph-documents", "green"

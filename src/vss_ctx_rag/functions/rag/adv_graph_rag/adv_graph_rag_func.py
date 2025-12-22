@@ -71,10 +71,12 @@ class AdvGraphRAGFunc(Function):
         logger.info(f"Initialized retriever with top_k={self.top_k}")
 
         # Setup prompts with examples
+        # Nemotron fix: /no_think must be the ONLY content of system message
         self.qa_prompt = ChatPromptTemplate.from_messages(
             [
+                ("system", "/no_think"),
                 (
-                    "system",
+                    "human",
                     """You are an AI assistant that answers questions based on the provided context.
 
              The context includes both retrieved information and relevant chat history.

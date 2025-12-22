@@ -263,6 +263,7 @@ RETURN node.text AS text,
     async def analyze_question(self, question: str) -> Dict[str, Any]:
         """Use LLM to analyze question and determine basic retrieval elements"""
         logger.info(f"Analyzing question: {question}")
+        # Nemotron fix: /no_think must be in separate system message
         prompt = f"""Analyze this question and identify key elements for graph database retrieval.
         Question: {question}
 
@@ -308,11 +309,14 @@ RETURN node.text AS text,
         Output only valid JSON. Do not include any other text.
         """
 
-        response = await self.chat_llm.ainvoke(prompt)
+        from langchain_core.messages import SystemMessage, HumanMessage
+        messages = [SystemMessage(content="/no_think"), HumanMessage(content=prompt)]
+        response = await self.chat_llm.ainvoke(messages)
         return response.content if hasattr(response, "content") else str(response)
 
     async def analyze_temporal_strategy(self, question: str) -> str:
         """Determine if question needs temporal retrieval and strategy"""
+        # Nemotron fix: /no_think must be in separate system message
         prompt = f"""Analyze this question to determine what type of temporal retrieval is needed.
         Question: {question}
 
@@ -333,7 +337,9 @@ RETURN node.text AS text,
         Output only valid JSON.
         """
 
-        response = await self.chat_llm.ainvoke(prompt)
+        from langchain_core.messages import SystemMessage, HumanMessage
+        messages = [SystemMessage(content="/no_think"), HumanMessage(content=prompt)]
+        response = await self.chat_llm.ainvoke(messages)
         return response.content if hasattr(response, "content") else str(response)
 
     async def analyze_temporal_times(self, question: str, temporal_strategy: str) -> str:
@@ -346,6 +352,7 @@ RETURN node.text AS text,
 
         guidance = strategy_guidance.get(temporal_strategy, "Extract any time references.")
 
+        # Nemotron fix: /no_think must be in separate system message
         prompt = f"""Analyze this question to extract temporal information.
         Question: {question}
         Temporal Strategy: {temporal_strategy}
@@ -368,7 +375,9 @@ RETURN node.text AS text,
         Output only valid JSON.
         """
 
-        response = await self.chat_llm.ainvoke(prompt)
+        from langchain_core.messages import SystemMessage, HumanMessage
+        messages = [SystemMessage(content="/no_think"), HumanMessage(content=prompt)]
+        response = await self.chat_llm.ainvoke(messages)
         return response.content if hasattr(response, "content") else str(response)
 
     def _convert_temporal_times_to_timestamps(
