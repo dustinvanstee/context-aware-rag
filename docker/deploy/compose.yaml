@@ -27,7 +27,7 @@ services:
     volumes:
       - ${MODEL_DIRECTORY:-.}:/opt/nim/.cache
     ports:
-      - "8002:8000"
+      - "${EMBEDDING_NIM_PORT:-8002}:8000"
     environment:
       NGC_API_KEY: ${NVIDIA_API_KEY:?"NVIDIA_API_KEY is required"}
     shm_size: 16gb
